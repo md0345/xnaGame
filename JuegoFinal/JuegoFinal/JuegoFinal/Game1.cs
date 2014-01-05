@@ -45,14 +45,18 @@ namespace JuegoFinal
         Texture2D mainBackground;
         Texture2D enemy1;
         Texture2D enemy2;
+        Texture2D enemigo;
         SplashScreen splashScreen;
         SpriteFont font;
         string textToDraw;
         string secondaryTextToDraw;
         SpriteFont spriteFont;
         SpriteFont secondarySpriteFont;
-
+        int lvl = 0;
         List<Enemies> enemies = new List<Enemies>();
+        Song planeMusic;
+        Scrolling scrolling1;
+        Scrolling scrolling2;
         Random random = new Random();
         public Game1()
         {
@@ -104,15 +108,19 @@ namespace JuegoFinal
                GraphicsDevice.Viewport.TitleSafeArea.Y +
                GraphicsDevice.Viewport.TitleSafeArea.Height / 2);
             jugador.Initialize(playerAnimation, playerPosition);
-            mainBackground = Content.Load<Texture2D>("Imagenes/intro");
+            mainBackground = Content.Load<Texture2D>("Imagenes/intro2");
             myVideoFile = Content.Load<Video>("Videos/Wildlife");
             spriteFont = Content.Load<SpriteFont>(@"fonts\SplashScreenFontLarge");
             secondarySpriteFont = Content.Load<SpriteFont>(@"fonts\SplashScreenFont");
             font = Content.Load<SpriteFont>(@"fonts\SplashScreenFont");
             // Start the music right away
             enemy1 = Content.Load<Texture2D>("Imagenes/bala");
-
+            enemy2 = Content.Load<Texture2D>("Imagenes/enemigo2");
+            scrolling1 = new Scrolling(Content.Load<Texture2D>("Imagenes/b1"), new Rectangle(0, 0, 1800, 500));
+            scrolling2 = new Scrolling(Content.Load<Texture2D>("Imagenes/b2"), new Rectangle(1800, 0, 1800, 500));
             // TODO: use this.Content to load your game content here
+
+            planeMusic = Content.Load<Song>("Sounds/soundAvionVolando1");
         }
 
         /// <summary>
@@ -170,6 +178,7 @@ namespace JuegoFinal
             }
         }
 
+    
         private void UpdateJugador(GameTime gameTime)
         {
             GamePadState currentState = GamePad.GetState(PlayerIndex.One);
@@ -187,12 +196,25 @@ namespace JuegoFinal
                         gameState = GameState.START;
                     }
                     break;
+                case GameState.LEVEL_CHANGE:
+
+                    if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+                    {
+                        ChangeGameState(Game1.GameState.PLAY, 0);
+                        lvl++;
+                    }
+
+                    break;
                 case GameState.START:
                     if (Keyboard.GetState().IsKeyDown(Keys.Enter))
                     {
                         if (gameState == Game1.GameState.LEVEL_CHANGE ||
                            gameState == Game1.GameState.START)
+                        {
                             ChangeGameState(Game1.GameState.PLAY, 0);
+                            lvl++;
+                            PlayMusic(planeMusic);
+                        }
 
                             // If we are in end game, exit
                         else if (gameState == Game1.GameState.END)
@@ -268,6 +290,23 @@ namespace JuegoFinal
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         /// 
         float spawn = 0;
+
+        private void PlayMusic(Song song)
+        {
+            // Due to the way the MediaPlayer plays music,
+            // we have to catch the exception. Music will play when the game is not tethered
+            try
+            {
+                // Play the music
+                MediaPlayer.Play(song);
+
+                // Loop the currently playing song
+                MediaPlayer.IsRepeating = true;
+            }
+            catch { }
+        }
+
+
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
@@ -297,14 +336,30 @@ namespace JuegoFinal
             if (gameState == GameState.PLAY)
             {
                 spawn += (float)gameTime.ElapsedGameTime.TotalSeconds;
-                foreach (Enemies enemy in enemies) {
+                foreach (Enemies enemy in enemies)
+                {
                     enemy.Update(graphics.GraphicsDevice);
+
                 }
                 LoadEnemies();
+
+                if (scrolling1.rectangle.X + scrolling1.texture.Width <= 0)
+                {
+                    scrolling1.rectangle.X = scrolling2.rectangle.X + scrolling2.texture.Width;
+                }
+
+                if (scrolling2.rectangle.X + scrolling2.texture.Width <= 0)
+                {
+                    scrolling2.rectangle.X = scrolling1.rectangle.X + scrolling1.texture.Width;
+                }
+
+                
+                scrolling1.Update();
+                scrolling2.Update();    
             }
 
             UpdateJugador(gameTime);
-
+            
             // Update the parallaxing background
             //bgLayer1.Update();
             //bgLayer2.Update();
@@ -325,13 +380,26 @@ namespace JuegoFinal
         {
             int ranY = random.Next(100, 400);
 
-            if (spawn >= 1) {
+            if (spawn >= 1)
+            {
                 spawn = 0;
                 if (enemies.Count() < 4)
-                    enemies.Add(new Enemies(enemy1, new Vector2(1100,ranY)));
+                {
+                    switch (lvl)
+                    {
+                        case 1:
+                            enemigo = enemy1;
+                            break;
+                        case 2:
+                            enemigo = enemy2;
+                            break;
+                    }
+                    enemies.Add(new Enemies(enemigo, new Vector2(1100, ranY)));
+                }
             }
-            for(int i=0; i<enemies.Count;i++)
-                if (!enemies[i].isVisible) {
+            for (int i = 0; i < enemies.Count; i++)
+                if (!enemies[i].isVisible)
+                {
                     enemies.RemoveAt(i);
                     i--;
                 }
@@ -383,6 +451,7 @@ namespace JuegoFinal
                     textToDraw = "";
                     secondaryTextToDraw = "Press ENTER to begin";
                     spriteBatch.Draw(mainBackground, Vector2.UnitY, Color.White);
+
                     // Get size of string
                     string tit = "Escuadron201";
                     Vector2 TitleSize = spriteFont.MeasureString(tit);
@@ -404,13 +473,48 @@ namespace JuegoFinal
                             Color.Gold);
                     break;
                 case GameState.LEVEL_CHANGE:
+                    // Get size of string
+                    string si = "Escuadron201";
+                    Vector2 itleSize = spriteFont.MeasureString(si);
+
+                    // Draw main text
+                    spriteBatch.DrawString(spriteFont, "Nivel: " + lvl + " completado", new Vector2(Window.ClientBounds.Width / 2
+                            - itleSize.X / 2,
+                            Window.ClientBounds.Height / 2),
+                            Color.Gold);
+
+                    spriteBatch.DrawString(spriteFont, "Puntos: " + score, new Vector2(Window.ClientBounds.Width / 2
+                           - itleSize.X / 2,
+                           Window.ClientBounds.Height / 2),
+                           Color.Gold);
+
+
+                    secondaryTextToDraw = "Press ENTER to begin";
+
+
+                    spriteBatch.DrawString(secondarySpriteFont,
+                        secondaryTextToDraw,
+                        new Vector2(Window.ClientBounds.Width / 2
+                            - secondarySpriteFont.MeasureString(
+                                secondaryTextToDraw).X / 2,
+                            Window.ClientBounds.Height / 2 +
+                            itleSize.Y + 10),
+                            Color.Gold);
+
+
                     break;
                 case GameState.PLAY:
+                    int bll = lvl;
+                    scrolling1.Draw(spriteBatch);
+                    scrolling2.Draw(spriteBatch);
+                    spriteBatch.DrawString(font, "nivel: " + lvl, new Vector2(GraphicsDevice.Viewport.TitleSafeArea.X, GraphicsDevice.Viewport.TitleSafeArea.Y), Color.White);
+                    // Draw the player health
                     spriteBatch.DrawString(font, "puntos: " + score, new Vector2(GraphicsDevice.Viewport.TitleSafeArea.X, GraphicsDevice.Viewport.TitleSafeArea.Y), Color.White);
                     // Draw the player health
                     spriteBatch.DrawString(font, "vida: " + jugador.Health, new Vector2(GraphicsDevice.Viewport.TitleSafeArea.X, GraphicsDevice.Viewport.TitleSafeArea.Y + 30), Color.White);
                     jugador.Draw(spriteBatch);
-                    foreach (Enemies enemy in enemies) {
+                    foreach (Enemies enemy in enemies)
+                    {
                         enemy.Draw(spriteBatch);
                     }
                     break;
