@@ -71,6 +71,8 @@ Vector2 gravity = new Vector2(0, -9.8f);
 
 
         #endregion
+
+        //
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -122,9 +124,9 @@ Vector2 gravity = new Vector2(0, -9.8f);
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             Animation playerAnimation = new Animation();
-            Texture2D playerTexture = Content.Load<Texture2D>("Imagenes/animacionNave");
+            Texture2D playerTexture = Content.Load<Texture2D>("Imagenes/avionS2");
             playerAnimation.Initialize(playerTexture,
-          Vector2.Zero, 115, 69, 8, 30, Color.White, 1f, true);
+          Vector2.Zero, 201, 69, 2, 58, Color.White, 1f, true);
 
             Vector2 playerPosition = new Vector2(
                 GraphicsDevice.Viewport.TitleSafeArea.X +

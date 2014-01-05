@@ -101,22 +101,15 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Imagenes\fuego.png">
-      <Name>fuego</Name>
+    <Compile Include="Imagenes\avionSprites.png">
+      <Name>avionSprites</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Imagenes\mario1.png">
-      <Name>mario1</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Imagenes\mapa1_1.png">
-      <Name>mapa1_1</Name>
+    <Compile Include="Imagenes\avionS2.png">
+      <Name>avionS2</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
